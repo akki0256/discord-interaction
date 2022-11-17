@@ -1,5 +1,5 @@
 {
-  "name": "@akki0256/discord-interaction",
+  "name": "@akki256/discord-interaction",
   "version": "1.0.0",
   "description": "Module for easier handling of discord interaction",
   "main": "./src/index.js",
@@ -19,7 +19,10 @@
     "discord",
     "discord.js"
   ],
-  "author": "akki256.",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "akki256",
   "license": "MIT License",
   "bugs": {
     "url": "https://github.com/akki0256/discord-interaction/issues"
