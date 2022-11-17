@@ -1,0 +1,34 @@
+{
+  "name": "@akki0256/discord-interaction",
+  "version": "1.0.0",
+  "description": "Module for easier handling of discord interaction",
+  "main": "./src/index.js",
+  "types": "./typings/index.d.ts",
+  "files": [
+    "src",
+    "typings"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akki0256/discord-interaction.git"
+  },
+  "keywords": [
+    "discord",
+    "discord.js"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "author": "akki256.",
+  "license": "MIT License",
+  "bugs": {
+    "url": "https://github.com/akki0256/discord-interaction/issues"
+  },
+  "homepage": "https://github.com/akki0256/discord-interaction/blob/main/README.md",
+  "dependencies": {
+    "discord.js": "^14.6.0"
+  }
+}
