@@ -19,9 +19,6 @@
     "discord",
     "discord.js"
   ],
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
-  },
   "author": "akki256.",
   "license": "MIT License",
   "bugs": {
