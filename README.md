@@ -1,15 +1,15 @@
-# @akki0256/discord-interaction
+# @akki256/discord-interaction
 
 > Module for easier handling of discord interaction
 
 ## Installation
 - npm
 ```bash
-npm install '@akki0256/discord-interaction'
+npm install '@akki256/discord-interaction'
 ```
 - yarn
 ```bash
-yarn add '@akki0256/discord-interaction'
+yarn add '@akki256/discord-interaction'
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ const discord = require('discord.js');
 const client = new discord.Client({
 	/* options */
 });
-const { DiscordInteractions } = require('@akki0256/discord-interaction');
+const { DiscordInteractions } = require('@akki256/discord-interaction');
 const interactions = new DiscordInteractions(client);
 interactions.loadInteractions('./interactions');
 
@@ -35,7 +35,7 @@ client.login('token');
 ```
 interactions/ping.js
 ```js
-/**@type {import('@akki0256/discord-interaction').ChatInputRegister} */
+/**@type {import('@akki256/discord-interaction').ChatInputRegister} */
 const ping_command = {
 	data: {
 		type: 'CHAT_INPUT',
