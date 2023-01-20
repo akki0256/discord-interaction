@@ -3,12 +3,8 @@
 > Module for easier handling of discord interaction
 
 ## Installation
-- npm
 ```bash
 npm install '@akki256/discord-interaction'
-```
-- yarn
-```bash
 yarn add '@akki256/discord-interaction'
 ```
 
@@ -35,19 +31,16 @@ client.login('token');
 ```
 interactions/ping.js
 ```js
-/**@type {import('@akki256/discord-interaction').ChatInputRegister} */
-const ping_command = {
-	data: {
-		type: 'CHAT_INPUT',
-		name: 'ping',
-		description: 'pong!'
-	},
-	exec: async (interaction) => {
-		return await interaction.reply('pong!');
-	}
-}
+const { ChatInput } = require('@akki256/discord-interaction');
 
-module.exports = [ ping_command ];
+const pingCommand = new ChatInput({
+	name: 'ping',
+	description: 'pong!'
+}, async interaction => {
+	return await interaction.reply('pong!')
+})
+
+module.exports = [ pingCommand ];
 ```
 
 ## Contributing

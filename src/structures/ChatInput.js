@@ -1,10 +1,10 @@
 const { ApplicationCommandType } = require('discord.js');
 const BaseCommand = require('./BaseCommand');
 
-class UserContext extends BaseCommand {
+class ChatInput extends BaseCommand {
 	constructor(data, meta, callback) {
-		super({ ...data, type: ApplicationCommandType.User }, meta, callback);
+		super({ ...data, type: ApplicationCommandType.ChatInput }, meta, callback);
 	}
 }
 
-module.exports = UserContext;
+module.exports = ChatInput;

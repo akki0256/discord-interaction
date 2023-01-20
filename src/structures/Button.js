@@ -1,6 +1,5 @@
-const BaseComponent = require('./BaseComponent');
+const BaseInteraction = require('./BaseInteraction');
 
-class Button extends BaseComponent {
-}
+class Button extends BaseInteraction {}
 
 module.exports = Button;

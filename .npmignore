@@ -6,3 +6,5 @@ build
 rollup.config.dev.js
 rollup.config.js
 yarn-error.log
+.eslintrc.json
+.prettierrc.json

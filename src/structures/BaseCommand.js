@@ -2,17 +2,17 @@ const { Collection } = require('discord.js');
 const BaseInteraction = require('./BaseInteraction');
 
 class BaseCommand extends BaseInteraction {
-	/**@type {number} */
 	#coolTime;
-	/**@type {Snowflake?} */
 	#guildId;
-	/**@type {Collection<Snowflake,Date>} */
 	#timer;
-	constructor(data, callback) {
+	constructor(data, meta, callback) {
+		if (!callback && typeof meta === 'function') {
+			callback = meta;
+			meta = {};
+		}
 		super(data, callback);
-
-		this.#coolTime = data.coolTime ?? 0;
-		this.#guildId = data.guildId || null;
+		this.#coolTime = meta.coolTime ?? 0;
+		this.#guildId = meta.guildId || undefined;
 		this.#timer = new Collection();
 	}
 
@@ -28,26 +28,25 @@ class BaseCommand extends BaseInteraction {
 		return this.#timer.clone();
 	}
 
-	resetCoolTime(user) {
-		this.#timer.set(user.id, null);
+	resetCoolTime(userId) {
+		return this.#timer.delete(userId);
 	}
 
-	getCoolTime(user) {
-		return this.timer.get(user.id) ?? null;
+	getCoolTime(userId) {
+		return this.#timer.get(userId)?.getTime() ?? null;
 	}
 
-	getLastUseDiff(user) {
-		const lastUse = this.getCoolTime(user) ?? 0;
-		return Date.now() - lastUse;
+	getLastUseDiff(userId) {
+		return Date.now() - (this.getCoolTime(userId) ?? 0);
 	}
 
-	isInCoolTime(user) {
-		return this.getLastUseDiff(user) <= this.coolTime;
+	isInCoolTime(userId) {
+		return this.getLastUseDiff(userId) <= this.#coolTime;
 	}
 
-	run(interaction, ...args) {
+	run(interaction, data, ...args) {
 		this.#timer.set(interaction.user.id, new Date());
-		return this.callback(interaction, ...args);
+		return this.callback(interaction, data, ...args);
 	}
 }
 

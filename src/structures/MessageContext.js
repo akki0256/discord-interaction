@@ -1,6 +1,10 @@
-const BaseContext = require('./BaseContext');
+const { ApplicationCommandType } = require('discord.js');
+const BaseCommand = require('./BaseCommand');
 
-class MassageContext extends BaseContext {
+class MessageContext extends BaseCommand {
+	constructor(data, meta, callback) {
+		super({ ...data, type: ApplicationCommandType.Message }, meta, callback);
+	}
 }
 
-module.exports = MassageContext;
+module.exports = MessageContext;

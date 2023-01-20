@@ -1,6 +1,5 @@
-const BaseComponent = require('./BaseComponent');
+const BaseInteraction = require('./BaseInteraction');
 
-class SelectMenu extends BaseComponent {
-}
+class SelectMenu extends BaseInteraction {}
 
 module.exports = SelectMenu;
