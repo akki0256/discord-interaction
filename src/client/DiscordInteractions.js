@@ -17,19 +17,19 @@ const UserContext = require('../structures/UserContext');
 const { InteractionsError, ErrorCodes } = require('../errors');
 
 class DiscordInteractions extends EventEmitter {
-	/**@type {import('discord.js').Client}*/
+	/** @type {import('discord.js').Client}*/
 	#client;
-	/**@type {Collection<string,Button>} */
+	/** @type {Collection<string,Button>} */
 	#buttons;
-	/**@type {Collection<string,ChatInput>} */
+	/** @type {Collection<string,ChatInput>} */
 	#chatInputs;
-	/**@type {Collection<string,MessageContext>} */
+	/** @type {Collection<string,MessageContext>} */
 	#messageContexts;
-	/**@type {Collection<string,Modal>} */
+	/** @type {Collection<string,Modal>} */
 	#modals;
-	/**@type {Collection<string,SelectMenu>} */
+	/** @type {Collection<string,SelectMenu>} */
 	#selectMenus;
-	/**@type {Collection<string,UserContext>} */
+	/** @type {Collection<string,UserContext>} */
 	#userContexts;
 	constructor(client) {
 		super();
@@ -42,37 +42,37 @@ class DiscordInteractions extends EventEmitter {
 		this.#userContexts = new Collection();
 	}
 
-	/**Loaded button interaction */
+	/** Loaded button interaction */
 	get buttons() {
 		return this.#buttons.clone();
 	}
 
-	/**Loaded Slash command */
+	/** Loaded Slash command */
 	get chatInputs() {
 		return this.#chatInputs.clone();
 	}
 
-	/**Loaded message context */
+	/** Loaded message context */
 	get messageContexts() {
 		return this.#messageContexts.clone();
 	}
 
-	/**Loaded modal interaction */
+	/** Loaded modal interaction */
 	get modals() {
 		return this.#modals.clone();
 	}
 
-	/**Loaded selectMenu interaction */
+	/** Loaded selectMenu interaction */
 	get selectMenus() {
 		return this.#selectMenus.clone();
 	}
 
-	/**Loaded user context */
+	/** Loaded user context */
 	get userContexts() {
 		return this.#userContexts.clone();
 	}
 
-	/**Loaded all interaction */
+	/** Loaded all interaction */
 	get interactions() {
 		return {
 			buttons: this.buttons,
@@ -91,54 +91,33 @@ class DiscordInteractions extends EventEmitter {
 	 * @returns {string[]}
 	 */
 	#getAllPath(basePath, predicate, pre = new Set()) {
-		if (typeof predicate !== 'function')
-			predicate = (value) => !/^(-|_|\.)/.test(value.name);
+		if (typeof predicate !== 'function') predicate = (value) => !/^(-|_|\.)/.test(value.name);
 		if (!fs.existsSync(basePath)) return;
 		fs.readdirSync(basePath, { withFileTypes: true }).forEach((v) => {
-			if (v.isFile() && predicate(v))
-				return pre.add(path.resolve(basePath, v.name));
-			if (v.isDirectory() && predicate(v))
-				this.#getAllPath(path.resolve(basePath, v.name), predicate, pre);
+			if (v.isFile() && predicate(v)) return pre.add(path.resolve(basePath, v.name));
+			if (v.isDirectory() && predicate(v)) this.#getAllPath(path.resolve(basePath, v.name), predicate, pre);
 		});
 		return [...pre];
 	}
 
 	#loadInteraction(interaction) {
-		if (interaction instanceof ChatInput)
-			this.#chatInputs.set(interaction.data.name, interaction);
-		if (interaction instanceof MessageContext)
-			this.#messageContexts.set(interaction.data.name, interaction);
-		if (interaction instanceof UserContext)
-			this.#userContexts.set(interaction.data.name, interaction);
-		const name =
-			interaction.data.customId instanceof RegExp
-				? `regexp:${Date.now()}`
-				: interaction.data.customId;
-		if (interaction instanceof Button) this.#buttons.set(name, interaction);
-		if (interaction instanceof Modal) this.#modals.set(name, interaction);
-		if (interaction instanceof SelectMenu)
-			this.#selectMenus.set(name, interaction);
+		if (interaction instanceof ChatInput) this.#chatInputs.set(interaction.data.name, interaction);
+		if (interaction instanceof MessageContext) this.#messageContexts.set(interaction.data.name, interaction);
+		if (interaction instanceof UserContext) this.#userContexts.set(interaction.data.name, interaction);
+		if (interaction instanceof Button) this.#buttons.set(interaction.data.customId instanceof RegExp ? `regexp:${Date.now()}` : interaction.data.customId, interaction);
+		if (interaction instanceof Modal) this.#modals.set(interaction.data.customId instanceof RegExp ? `regexp:${Date.now()}` : interaction.data.customId, interaction);
+		if (interaction instanceof SelectMenu) this.#selectMenus.set(interaction.data.customId instanceof RegExp ? `regexp:${Date.now()}` : interaction.data.customId, interaction);
 	}
 
 	async deleteNoLoadInteractions(guildId) {
-		const registered = await this.#client.application.commands.fetch({
-			guildId,
-		});
+		const registered = await this.#client.application.commands.fetch({ guildId });
 		const commands = [
 			...this.chatInputs.values(),
 			...this.userContexts.values(),
 			...this.messageContexts.values(),
 		];
 		for (const cmd of registered.values()) {
-			if (
-				commands.some(
-					(command) =>
-						cmd.type === command.data.type &&
-						cmd.guildId === command.guildId &&
-						cmd.name === command.data.name
-				)
-			)
-				continue;
+			if (commands.some((command) => cmd.type === command.data.type && cmd.guildId === command.guildId && cmd.name === command.data.name)) continue;
 			cmd.delete();
 		}
 	}
@@ -152,9 +131,7 @@ class DiscordInteractions extends EventEmitter {
 		for (const filePath of this.#getAllPath(basePath, predicate)) {
 			const { default: interactionData } = await import(`file://${filePath}`);
 			if (Array.isArray(interactionData)) {
-				interactionData.forEach((interaction) => {
-					this.#loadInteraction(interaction);
-				});
+				interactionData.forEach((interaction) => this.#loadInteraction(interaction));
 			} else {
 				this.#loadInteraction(interactionData);
 			}
@@ -163,9 +140,7 @@ class DiscordInteractions extends EventEmitter {
 	}
 
 	async registerCommands(options = {}) {
-		if (typeof options === 'string') {
-			options = { guildId: options };
-		}
+		if (typeof options === 'string') options = { guildId: options };
 		const guildIds = new Set();
 		this.chatInputs.forEach((chatInput) => {
 			if (chatInput.guildId) guildIds.add(chatInput.guildId);
@@ -194,78 +169,36 @@ class DiscordInteractions extends EventEmitter {
 	 */
 	async #editOrCreateCommand(interactionData, options) {
 		const guildId = options.guildId ?? interactionData.guildId;
-		const registered = await this.#client.application.commands.fetch({
-			guildId,
-		});
-		const cmd = registered.find(
-			(c) =>
-				c.type === interactionData.data.type &&
-				c.name === interactionData.data.name
-		);
+		const registered = await this.#client.application.commands.fetch({ guildId });
+		const cmd = registered.find((c) => c.type === interactionData.data.type && c.name === interactionData.data.name);
 		if (!cmd) {
 			const created = await this.#client.application.commands.create(
 				interactionData.data,
-				guildId
+				guildId,
 			);
-			this.emit(
-				`${ApplicationCommandType[interactionData.data.type]}Create`,
-				created
-			);
+			this.emit(`${ApplicationCommandType[interactionData.data.type]}Create`, created);
 		} else {
 			cmd.edit(interactionData.data);
-			this.emit(
-				`${ApplicationCommandType[interactionData.data.type]}Edit`,
-				cmd
-			);
+			this.emit(`${ApplicationCommandType[interactionData.data.type]}Edit`, cmd);
 		}
 	}
 
 	run(interaction, ...args) {
-		return new Promise((resolve, roject) => {
+		return new Promise((resolve, reject) => {
 			let select;
-			if (this.#isChatInputCommand(interaction))
-				select = this.#chatInputs.get(interaction.commandName);
-			if (this.#isUserContextMenuCommand(interaction))
-				select = this.#userContexts.get(interaction.commandName);
-			if (this.#isMessageContextMenuCommand(interaction))
-				select = this.#messageContexts.get(interaction.commandName);
-			if (this.#isButton(interaction)) {
-				select =
-					this.#buttons.get(interaction.customId) ??
-					this.#buttons.find(
-						({ data: { customId } }) =>
-							customId instanceof RegExp && customId.test(interaction.customId)
-					);
-			}
+			if (this.#isChatInputCommand(interaction)) select = this.#chatInputs.get(interaction.commandName);
+			if (this.#isUserContextMenuCommand(interaction)) select = this.#userContexts.get(interaction.commandName);
+			if (this.#isMessageContextMenuCommand(interaction)) select = this.#messageContexts.get(interaction.commandName);
+			if (this.#isButton(interaction)) select = this.#buttons.get(interaction.customId) ?? this.#buttons.find(({ data: { customId } }) => customId instanceof RegExp && customId.test(interaction.customId),);
 			if (this.#isAnySelectMenu(interaction)) {
-				select =
-					this.#selectMenus.get(interaction.customId) ??
-					this.#selectMenus.find(
-						({ data: { customId } }) =>
-							customId instanceof RegExp && customId.test(interaction.customId)
-					);
+				select = this.#selectMenus.get(interaction.customId) ?? this.#selectMenus.find(({ data: { customId } }) => customId instanceof RegExp && customId.test(interaction.customId),);
 				if (!select) return;
-				if (
-					select.data.type &&
-					ComponentType[`${select.data.type}Select`] !==
-						interaction.componentType
-				)
-					return;
+				if (select.data.type && ComponentType[`${select.data.type}Select`] !== interaction.componentType) return;
 			}
-			if (this.#isModalSubmit(interaction)) {
-				select =
-					this.#modals.get(interaction.customId) ??
-					this.#modals.find(
-						({ data: { customId } }) =>
-							customId instanceof RegExp && customId.test(interaction.customId)
-					);
-			}
+			if (this.#isModalSubmit(interaction)) select = this.#modals.get(interaction.customId) ?? this.#modals.find(({ data: { customId } }) => customId instanceof RegExp && customId.test(interaction.customId),);
 			if (!select) return;
-			if (
-				select instanceof BaseCommand &&
-				select.isInCoolTime(interaction.user.id)
-			) {
-				return roject({
+			if (select instanceof BaseCommand && select.isInCoolTime(interaction.user)) {
+				return reject({
 					error: new InteractionsError(ErrorCodes.CommandHasCoolTime),
 					data: select,
 				});
@@ -274,61 +207,32 @@ class DiscordInteractions extends EventEmitter {
 		});
 	}
 
-	/**
-	 * @param {Interaction} interaction
-	 */
+	/**@param {Interaction} interaction*/
 	#isChatInputCommand(interaction) {
-		return (
-			interaction.type === InteractionType.ApplicationCommand &&
-			interaction.commandType === ApplicationCommandType.ChatInput
-		);
+		return interaction.type === InteractionType.ApplicationCommand && interaction.commandType === ApplicationCommandType.ChatInput;
 	}
 
-	/**
-	 * @param {Interaction} interaction
-	 */
+	/**@param {Interaction} interaction*/
 	#isContextMenuCommand(interaction) {
-		return (
-			interaction.type === InteractionType.ApplicationCommand &&
-			[ApplicationCommandType.User, ApplicationCommandType.Message].includes(
-				interaction.commandType
-			)
-		);
+		return interaction.type === InteractionType.ApplicationCommand && [ApplicationCommandType.User, ApplicationCommandType.Message].includes(interaction.commandType);
 	}
 
-	/**
-	 * @param {Interaction} interaction
-	 */
+	/**@param {Interaction} interaction*/
 	#isUserContextMenuCommand(interaction) {
-		return (
-			this.#isContextMenuCommand(interaction) &&
-			interaction.commandType === ApplicationCommandType.User
-		);
+		return this.#isContextMenuCommand(interaction) && interaction.commandType === ApplicationCommandType.User
 	}
 
-	/**
-	 * @param {Interaction} interaction
-	 */
+	/**@param {Interaction} interaction*/
 	#isMessageContextMenuCommand(interaction) {
-		return (
-			this.#isContextMenuCommand(interaction) &&
-			interaction.commandType === ApplicationCommandType.Message
-		);
+		return this.#isContextMenuCommand(interaction) && interaction.commandType === ApplicationCommandType.Message
 	}
 
-	/**
-	 * @param {Interaction} interaction
-	 */
+	/**@param {Interaction} interaction*/
 	#isButton(interaction) {
-		return (
-			interaction.type === InteractionType.MessageComponent &&
-			interaction.componentType === ComponentType.Button
-		);
+		return interaction.type === InteractionType.MessageComponent && interaction.componentType === ComponentType.Button;
 	}
 
-	/**
-	 * @param {Interaction} interaction
-	 */
+	/**@param {Interaction} interaction*/
 	#isAnySelectMenu(interaction) {
 		return (
 			interaction.type === InteractionType.MessageComponent &&
@@ -342,9 +246,7 @@ class DiscordInteractions extends EventEmitter {
 		);
 	}
 
-	/**
-	 * @param {Interaction} interaction
-	 */
+	/**@param {Interaction} interaction*/
 	#isModalSubmit(interaction) {
 		return interaction.type === InteractionType.ModalSubmit;
 	}

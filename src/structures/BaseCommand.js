@@ -2,52 +2,52 @@ const { Collection } = require('discord.js');
 const BaseInteraction = require('./BaseInteraction');
 
 class BaseCommand extends BaseInteraction {
-	#coolTime;
-	#guildId;
-	#timer;
-	constructor(data, meta, callback) {
-		if (!callback && typeof meta === 'function') {
-			callback = meta;
-			meta = {};
-		}
-		super(data, callback);
-		this.#coolTime = meta.coolTime ?? 0;
-		this.#guildId = meta.guildId || undefined;
-		this.#timer = new Collection();
-	}
+  #coolTime;
+  #guildId;
+  #timer;
+  constructor(data, meta, callback) {
+    if (!callback && typeof meta === 'function') {
+      callback = meta;
+      meta = {};
+    }
+    super(data, callback);
+    this.#coolTime = meta.coolTime ?? 0;
+    this.#guildId = meta.guildId || undefined;
+    this.#timer = new Collection();
+  }
 
-	get coolTime() {
-		return this.#coolTime;
-	}
+  get coolTime() {
+    return this.#coolTime;
+  }
 
-	get guildId() {
-		return this.#guildId;
-	}
+  get guildId() {
+    return this.#guildId;
+  }
 
-	get timer() {
-		return this.#timer.clone();
-	}
+  get timer() {
+    return this.#timer.clone();
+  }
 
-	resetCoolTime(user) {
-		return this.#timer.delete(user.id);
-	}
+  resetCoolTime(user) {
+    return this.#timer.delete(user.id);
+  }
 
-	getCoolTime(user) {
-		return this.#timer.get(user.id)?.getTime() ?? null;
-	}
+  getCoolTime(user) {
+    return this.#timer.get(user.id)?.getTime() ?? null;
+  }
 
-	getLastUseDiff(user) {
-		return Date.now() - (this.getCoolTime(user) ?? 0);
-	}
+  getLastUseDiff(user) {
+    return Date.now() - (this.getCoolTime(user) ?? 0);
+  }
 
-	isInCoolTime(user) {
-		return this.getLastUseDiff(user) <= this.#coolTime;
-	}
+  isInCoolTime(user) {
+    return this.getLastUseDiff(user) <= this.#coolTime;
+  }
 
-	run(interaction, data, ...args) {
-		this.#timer.set(interaction.user.id, new Date());
-		return this.callback(interaction, data, ...args);
-	}
+  run(interaction, data, ...args) {
+    this.#timer.set(interaction.user.id, new Date());
+    return this.callback(interaction, data, ...args);
+  }
 }
 
 module.exports = BaseCommand;

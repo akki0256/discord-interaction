@@ -6,5 +6,5 @@ const { createEnum } = require('../util/Util');
  *
  * @prop {'CommandHasCoolTime'} CommandHasCoolTime
  */
-/**@type {DiscordInteractionsErrorCodes} */
+/** @type {DiscordInteractionsErrorCodes} */
 module.exports = createEnum(['CommandHasCoolTime']);

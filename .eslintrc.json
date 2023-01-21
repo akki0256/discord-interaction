@@ -1,26 +1,20 @@
 {
     "env": {
-        "browser": true,
         "commonjs": true,
-        "es2021": true
+        "es2021": true,
+        "node": true
     },
-    "extends": "plugin:prettier/recommended",
+    "extends": "google",
     "overrides": [],
     "parserOptions": {
         "ecmaVersion": "latest"
     },
     "rules": {
-        "semi": [
-            "error",
-            "always"
-        ],
-        "quotes": [
-            "error",
-            "single"
-        ],
-        "indent": [
-            "error",
-            "tab"
-        ]
+        "require-jsdoc": "off",
+        "valid-jsdoc": "off",
+        "max-len": "off",
+        "no-tabs": "off",
+        "prefer-promise-reject-errors": "off",
+        "no-mixed-spaces-and-tabs": "off"
     }
 }

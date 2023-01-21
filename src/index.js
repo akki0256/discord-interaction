@@ -1,7 +1,6 @@
 'use strict';
 
-exports.InteractionsError =
-	require('./errors/InteractionsError').InteractionsError;
+exports.InteractionsError = require('./errors/InteractionsError').InteractionsError;
 exports.DiscordInteractionsErrorCodes = require('./errors/ErrorCodes');
 
 exports.DiscordInteractions = require('./client/DiscordInteractions');
