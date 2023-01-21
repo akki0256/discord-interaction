@@ -120,6 +120,29 @@ class DiscordInteractions extends EventEmitter {
 			this.#selectMenus.set(name, interaction);
 	}
 
+	async deleteNoLoadInteractions(guildId) {
+		const registered = await this.#client.application.commands.fetch({
+			guildId,
+		});
+		const commands = [
+			...this.chatInputs.values(),
+			...this.userContexts.values(),
+			...this.messageContexts.values(),
+		];
+		for (const cmd of registered.values()) {
+			if (
+				commands.some(
+					(command) =>
+						cmd.type === command.data.type &&
+						cmd.guildId === command.guildId &&
+						cmd.name === command.data.name
+				)
+			)
+				continue;
+			cmd.delete();
+		}
+	}
+
 	/**
 	 * Load an interaction file
 	 * @param {string} basePath Path of the directory where it is stored
@@ -143,15 +166,26 @@ class DiscordInteractions extends EventEmitter {
 		if (typeof options === 'string') {
 			options = { guildId: options };
 		}
+		const guildIds = new Set();
 		this.chatInputs.forEach((chatInput) => {
+			if (chatInput.guildId) guildIds.add(chatInput.guildId);
 			this.#editOrCreateCommand(chatInput, options);
 		});
 		this.messageContexts.forEach((messageContext) => {
+			if (messageContext.guildId) guildIds.add(messageContext.guildId);
 			this.#editOrCreateCommand(messageContext, options);
 		});
 		this.userContexts.forEach((userContext) => {
+			if (userContext.guildId) guildIds.add(userContext.guildId);
 			this.#editOrCreateCommand(userContext, options);
 		});
+		if (options.deleteNoLoad) {
+			if (options.guildId) {
+				this.deleteNoLoadInteractions(options.guildId);
+			} else {
+				guildIds.forEach((guildId) => this.deleteNoLoadInteractions(guildId));
+			}
+		}
 	}
 
 	/**
@@ -211,7 +245,12 @@ class DiscordInteractions extends EventEmitter {
 							customId instanceof RegExp && customId.test(interaction.customId)
 					);
 				if (!select) return;
-				if (select.data.type && ComponentType[`${select.data.type}Select`] !== interaction.componentType) return;
+				if (
+					select.data.type &&
+					ComponentType[`${select.data.type}Select`] !==
+						interaction.componentType
+				)
+					return;
 			}
 			if (this.#isModalSubmit(interaction)) {
 				select =
@@ -222,7 +261,10 @@ class DiscordInteractions extends EventEmitter {
 					);
 			}
 			if (!select) return;
-			if (select instanceof BaseCommand && select.isInCoolTime(interaction.user.id)) {
+			if (
+				select instanceof BaseCommand &&
+				select.isInCoolTime(interaction.user.id)
+			) {
 				return roject({
 					error: new InteractionsError(ErrorCodes.CommandHasCoolTime),
 					data: select,

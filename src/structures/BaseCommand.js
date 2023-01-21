@@ -28,20 +28,20 @@ class BaseCommand extends BaseInteraction {
 		return this.#timer.clone();
 	}
 
-	resetCoolTime(userId) {
-		return this.#timer.delete(userId);
+	resetCoolTime(user) {
+		return this.#timer.delete(user.id);
 	}
 
-	getCoolTime(userId) {
-		return this.#timer.get(userId)?.getTime() ?? null;
+	getCoolTime(user) {
+		return this.#timer.get(user.id)?.getTime() ?? null;
 	}
 
-	getLastUseDiff(userId) {
-		return Date.now() - (this.getCoolTime(userId) ?? 0);
+	getLastUseDiff(user) {
+		return Date.now() - (this.getCoolTime(user) ?? 0);
 	}
 
-	isInCoolTime(userId) {
-		return this.getLastUseDiff(userId) <= this.#coolTime;
+	isInCoolTime(user) {
+		return this.getLastUseDiff(user) <= this.#coolTime;
 	}
 
 	run(interaction, data, ...args) {
