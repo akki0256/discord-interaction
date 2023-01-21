@@ -31,6 +31,8 @@ class DiscordInteractions extends EventEmitter {
 	#selectMenus;
 	/** @type {Collection<string,UserContext>} */
 	#userContexts;
+	/** @type {Snowflake} */
+	#guildId;
 	constructor(client) {
 		super();
 		this.#client = client;
@@ -84,6 +86,20 @@ class DiscordInteractions extends EventEmitter {
 		};
 	}
 
+	async deleteNoLoadInteractions(guildId) {
+		const registered = await this.#client.application.commands.fetch({ guildId });
+		const commands = [
+			...this.chatInputs.values(),
+			...this.userContexts.values(),
+			...this.messageContexts.values(),
+		];
+		for (const cmd of registered.values()) {
+			if (commands.some((command) => cmd.type === command.data.type && cmd.guildId === (this.#guildId ?? command.guildId) && cmd.name === command.data.name)) continue;
+			cmd.delete();
+			this.emit(`${ApplicationCommandType[cmd.type]}Delete`, cmd);
+		}
+	}
+
 	/**
 	 * @param {string} basePath
 	 * @param {(value:fs.Dirent) => boolean} [predicate]
@@ -109,19 +125,6 @@ class DiscordInteractions extends EventEmitter {
 		if (interaction instanceof SelectMenu) this.#selectMenus.set(interaction.data.customId instanceof RegExp ? `regexp:${Date.now()}` : interaction.data.customId, interaction);
 	}
 
-	async deleteNoLoadInteractions(guildId) {
-		const registered = await this.#client.application.commands.fetch({ guildId });
-		const commands = [
-			...this.chatInputs.values(),
-			...this.userContexts.values(),
-			...this.messageContexts.values(),
-		];
-		for (const cmd of registered.values()) {
-			if (commands.some((command) => cmd.type === command.data.type && cmd.guildId === command.guildId && cmd.name === command.data.name)) continue;
-			cmd.delete();
-		}
-	}
-
 	/**
 	 * Load an interaction file
 	 * @param {string} basePath Path of the directory where it is stored
@@ -141,18 +144,19 @@ class DiscordInteractions extends EventEmitter {
 
 	async registerCommands(options = {}) {
 		if (typeof options === 'string') options = { guildId: options };
+		this.setGuildOnly(options.guildId);
 		const guildIds = new Set();
 		this.chatInputs.forEach((chatInput) => {
 			if (chatInput.guildId) guildIds.add(chatInput.guildId);
-			this.#editOrCreateCommand(chatInput, options);
+			this.#editOrCreateCommand(chatInput);
 		});
 		this.messageContexts.forEach((messageContext) => {
 			if (messageContext.guildId) guildIds.add(messageContext.guildId);
-			this.#editOrCreateCommand(messageContext, options);
+			this.#editOrCreateCommand(messageContext);
 		});
 		this.userContexts.forEach((userContext) => {
 			if (userContext.guildId) guildIds.add(userContext.guildId);
-			this.#editOrCreateCommand(userContext, options);
+			this.#editOrCreateCommand(userContext);
 		});
 		if (options.deleteNoLoad) {
 			if (options.guildId) {
@@ -167,20 +171,28 @@ class DiscordInteractions extends EventEmitter {
 	 * @param {ChatInput | MessageContext | UserContext} interactionData
 	 * @param {{ guildId?: string }} options
 	 */
-	async #editOrCreateCommand(interactionData, options) {
-		const guildId = options.guildId ?? interactionData.guildId;
+	async #editOrCreateCommand(interactionData) {
+		const guildId = this.#guildId ?? interactionData.guildId;
 		const registered = await this.#client.application.commands.fetch({ guildId });
 		const cmd = registered.find((c) => c.type === interactionData.data.type && c.name === interactionData.data.name);
 		if (!cmd) {
-			const created = await this.#client.application.commands.create(
-				interactionData.data,
-				guildId,
-			);
+			const created = await this.#client.application.commands.create(interactionData.data, guildId);
 			this.emit(`${ApplicationCommandType[interactionData.data.type]}Create`, created);
 		} else {
 			cmd.edit(interactionData.data);
 			this.emit(`${ApplicationCommandType[interactionData.data.type]}Edit`, cmd);
 		}
+	}
+
+	setGuildOnly(guildId) {
+		if (!/^\d{16,}$/.test(guildId)) return this;
+		this.#guildId = guildId;
+		return this;
+	}
+
+	resetGuildOnly() {
+		this.#guildId = undefined;
+		return this;
 	}
 
 	run(interaction, ...args) {

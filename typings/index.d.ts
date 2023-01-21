@@ -108,6 +108,8 @@ export class DiscordInteractions extends EventEmitter {
 	registerCommands(options: registerOption): Promise<void>;
 	registerCommands(guildId?: Snowflake): Promise<void>;
 	deleteNoLoadInteractions(guildId?: Snowflake): Promise<void>;
+	setGuildOnly(guildId: Snowflake): DiscordInteractions;
+	resetGuildOnly(): DiscordInteractions;
 	run(interaction: InteractionInteraction, ...args: any[]): Promise<any>;
 
 	#getAllPath(path: string, predicate?: (value: fs.Dirent) => boolean, pre?: Set<string>): string[];
@@ -166,12 +168,15 @@ export class InteractionsError extends Error { }
 export interface DiscordInteractionsEvents {
 	ChatInputCreate: [command: ChatInput];
 	ChatInputEdit: [command: ChatInput];
+	ChatInputDelete: [command: UserContext];
 	error: [error: Error];
 	interactionLoaded: [Interaction: Interactions];
 	UserCreate: [command: MessageContext];
+	UserDelete: [command: UserContext];
 	UserEdit: [command: MessageContext];
 	MessageCreate: [command: UserContext];
 	MessageEdit: [command: UserContext];
+	MessageDelete: [command: UserContext];
 }
 
 export interface Interactions {
