@@ -1,3 +1,5 @@
+const BaseCommand = require("./BaseCommand");
+
 class BaseInteraction {
   #data;
   #callback;
@@ -16,6 +18,10 @@ class BaseInteraction {
 
   run(interaction, data, ...args) {
     return this.callback(interaction, data, ...args);
+  }
+
+  isCommand() {
+    return false;
   }
 }
 

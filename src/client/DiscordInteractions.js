@@ -108,7 +108,7 @@ class DiscordInteractions extends EventEmitter {
 	 */
 	#getAllPath(basePath, predicate, pre = new Set()) {
 		if (typeof predicate !== 'function') predicate = (value) => !/^(-|_|\.)/.test(value.name);
-		if (!fs.existsSync(basePath)) return;
+		if (!fs.existsSync(basePath)) return [];
 		fs.readdirSync(basePath, { withFileTypes: true }).forEach((v) => {
 			if (v.isFile() && predicate(v)) return pre.add(path.resolve(basePath, v.name));
 			if (v.isDirectory() && predicate(v)) this.#getAllPath(path.resolve(basePath, v.name), predicate, pre);
@@ -132,6 +132,7 @@ class DiscordInteractions extends EventEmitter {
 	 */
 	async loadInteractions(basePath, predicate) {
 		for (const filePath of this.#getAllPath(basePath, predicate)) {
+			this.emit('fileLoad', filePath);
 			const { default: interactionData } = await import(`file://${filePath}`);
 			if (Array.isArray(interactionData)) {
 				interactionData.forEach((interaction) => this.#loadInteraction(interaction));
@@ -210,10 +211,7 @@ class DiscordInteractions extends EventEmitter {
 			if (this.#isModalSubmit(interaction)) select = this.#modals.get(interaction.customId) ?? this.#modals.find(({ data: { customId } }) => customId instanceof RegExp && customId.test(interaction.customId),);
 			if (!select) return;
 			if (select instanceof BaseCommand && select.isInCoolTime(interaction.user)) {
-				return reject({
-					error: new InteractionsError(ErrorCodes.CommandHasCoolTime),
-					data: select,
-				});
+				return reject(new InteractionsError(ErrorCodes.CommandHasCoolTime, select));
 			}
 			resolve(select.run(interaction, select, ...args));
 		});

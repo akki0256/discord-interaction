@@ -37,6 +37,7 @@ export class BaseInteraction<T extends InteractionData, U extends InteractionInt
 	public get data(): T;
 	public get callback(): (interaction: U, data: BaseInteraction<T, U>, ...args: any[]) => any;
 	protected run(interaction: U, ...args: any[]): any;
+	public isCommand(): this is BaseCommand<T, U>;
 }
 
 export class BaseCommand<T extends CommandData, U extends CommandInteraction> extends BaseInteraction<T, U> {
@@ -110,7 +111,7 @@ export class DiscordInteractions extends EventEmitter {
 	deleteNoLoadInteractions(guildId?: Snowflake): Promise<void>;
 	setGuildOnly(guildId: Snowflake): DiscordInteractions;
 	resetGuildOnly(): DiscordInteractions;
-	run(interaction: InteractionInteraction, ...args: any[]): Promise<any>;
+	run(interaction: InteractionInteraction, ...args: any[]): InteractionsPromise<any, InteractionsError>;
 
 	#getAllPath(path: string, predicate?: (value: fs.Dirent) => boolean, pre?: Set<string>): string[];
 	#loadInteraction(interaction: Button | ChatInput | MessageContext | Modal | SelectMenu<any> | UserContext): void;
@@ -159,17 +160,37 @@ export class DiscordInteractions extends EventEmitter {
 	//#endregion
 }
 
-export class InteractionsError extends Error { }
+export class InteractionsError extends Error {
+	public readonly data: ChatInput | UserContext | MessageContext | Button | SelectMenu<any> | Modal;
+}
 
 //#endregion
 
 //#region Typedef
 
+export interface InteractionsPromise<T, R> extends Promise<T> {
+	/**
+		 * Attaches callbacks for the resolution and/or rejection of the Promise.
+		 * @param onfulfilled The callback to execute when the Promise is resolved.
+		 * @param onrejected The callback to execute when the Promise is rejected.
+		 * @returns A Promise for the completion of which ever callback is executed.
+		 */
+	then<TResult1 = T, TResult2 = R>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: R) => TResult2 | PromiseLike<TResult2>) | undefined | null): InteractionsPromise<TResult1, TResult2>;
+
+	/**
+	 * Attaches a callback for only the rejection of the Promise.
+	 * @param onrejected The callback to execute when the Promise is rejected.
+	 * @returns A Promise for the completion of the callback.
+	 */
+	catch<TResult = R>(onrejected?: ((reason: R) => TResult | PromiseLike<TResult>) | undefined | null): InteractionsPromise<T, TResult>;
+}
+
 export interface DiscordInteractionsEvents {
 	ChatInputCreate: [command: ChatInput];
 	ChatInputEdit: [command: ChatInput];
 	ChatInputDelete: [command: UserContext];
-	error: [error: Error];
+	fileLoad: [filePath: string];
+	error: [error: InteractionsError];
 	interactionLoaded: [Interaction: Interactions];
 	UserCreate: [command: MessageContext];
 	UserDelete: [command: UserContext];

@@ -48,6 +48,10 @@ class BaseCommand extends BaseInteraction {
     this.#timer.set(interaction.user.id, new Date());
     return this.callback(interaction, data, ...args);
   }
+
+  isCommand() {
+    return true;
+  }
 }
 
 module.exports = BaseCommand;

@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
  - Fix `isInCoolTime()` parameter
 
 **DiscordInteractions:**
- - Fix `loadInteractions()`return value
+ - Fix `loadInteractions()` return value
  - Fix `registerCommands()` return value
 
 ### Added
@@ -27,14 +27,23 @@ All notable changes to this project will be documented in this file.
 ### Typings
  - Fix `loadInteractions()` parameter
 
- ## [2.0.3](https://github.com/akki0256/discord-interaction/compare/v2.0.2...v2.0.3) - (2023-01-21)
+## [2.0.3](https://github.com/akki0256/discord-interaction/compare/v2.0.2...v2.0.3) - (2023-01-21)
  
 ### Fixed
  - Fix typo
 
- ## [2.0.4](https://github.com/akki0256/discord-interaction/compare/v2.0.3...v2.0.4) - (2023-01-21)
+## [2.0.4](https://github.com/akki0256/discord-interaction/compare/v2.0.3...v2.0.4) - (2023-01-21)
 
 ### Added
 **DiscordInteractions:**
  - Add `setGuildOnly()`
  - Add `resetGuildOnly()`
+
+## [2.1.0](https://github.com/akki0256/discord-interaction/compare/v2.0.4...v2.1.0) - (2023-01-23)
+
+### Added
+ - Add `DiscordInteractions#fileLoad`
+ - Add `BaseInteraction.isCommand()`
+
+### Bug Fixes
+ - Fix `DiscordInteractions.#getAllPath()` return value
