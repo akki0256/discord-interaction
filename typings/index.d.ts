@@ -37,7 +37,7 @@ export class BaseInteraction<T extends InteractionData, U extends InteractionInt
 	public get data(): T;
 	public get callback(): (interaction: U, data: BaseInteraction<T, U>, ...args: any[]) => any;
 	protected run(interaction: U, ...args: any[]): any;
-	public isCommand(): this is BaseCommand<T, U>;
+	public isCommand(): this is BaseCommand<CommandData,CommandInteraction>;
 }
 
 export class BaseCommand<T extends CommandData, U extends CommandInteraction> extends BaseInteraction<T, U> {
@@ -111,7 +111,7 @@ export class DiscordInteractions extends EventEmitter {
 	deleteNoLoadInteractions(guildId?: Snowflake): Promise<void>;
 	setGuildOnly(guildId: Snowflake): DiscordInteractions;
 	resetGuildOnly(): DiscordInteractions;
-	run(interaction: InteractionInteraction, ...args: any[]): InteractionsPromise<any, InteractionsError>;
+	run(interaction: InteractionInteraction, ...args: any[]): InteractionsPromise<any, InteractionsError | Error>;
 
 	#getAllPath(path: string, predicate?: (value: fs.Dirent) => boolean, pre?: Set<string>): string[];
 	#loadInteraction(interaction: Button | ChatInput | MessageContext | Modal | SelectMenu<any> | UserContext): void;
@@ -161,6 +161,7 @@ export class DiscordInteractions extends EventEmitter {
 }
 
 export class InteractionsError extends Error {
+	public readonly code: DiscordInteractionsErrorCodes;
 	public readonly data: ChatInput | UserContext | MessageContext | Button | SelectMenu<any> | Modal;
 }
 

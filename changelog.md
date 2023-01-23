@@ -46,4 +46,11 @@ All notable changes to this project will be documented in this file.
  - Add `BaseInteraction.isCommand()`
 
 ### Bug Fixes
- - Fix `DiscordInteractions.#getAllPath()` return value
+ - Add `deleteNoLoadInteractions()`
+
+## [2.1.1](https://github.com/akki0256/discord-interaction/compare/v2.1.0...v2.1.1) - (2023-01-23)
+
+### Typings
+ - Fix `BaseInteraction.isCommand()` return value
+ - Fix `DiscordInteractions.run()` return value
+ - Add `InteractionsError.code`
