@@ -1,27 +1,39 @@
-const BaseCommand = require("./BaseCommand");
-
 class BaseInteraction {
   #data;
   #callback;
+  #id;
   constructor(data, callback) {
     this.#data = data;
     this.#callback = callback;
+    this.#id = null;
   }
 
   get data() {
-    return { ...this.#data };
+    return structuredClone(this.#data);
   }
 
   get callback() {
     return this.#callback;
   }
 
-  run(interaction, data, ...args) {
-    return this.callback(interaction, data, ...args);
+  get id() {
+    return this.#id;
+  }
+
+  _setId(id) {
+    this.#id = id;
+  }
+
+  _run(interaction, args) {
+    return this.#callback.call(this, interaction, args);
   }
 
   isCommand() {
     return false;
+  }
+
+  toString() {
+    return String(this.#data.customId) || this.#data.name;
   }
 }
 

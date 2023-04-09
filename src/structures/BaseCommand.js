@@ -32,25 +32,44 @@ class BaseCommand extends BaseInteraction {
     return this.#timer.delete(user.id);
   }
 
-  getCoolTime(user) {
+  getLastUse(user) {
     return this.#timer.get(user.id)?.getTime() ?? null;
   }
 
-  getLastUseDiff(user) {
-    return Date.now() - (this.getCoolTime(user) ?? 0);
+  getElapsedTime(user) {
+    return Date.now() - (this.getLastUse(user) ?? 0);
   }
 
   isInCoolTime(user) {
-    return this.getLastUseDiff(user) <= this.#coolTime;
+    return this.getElapsedTime(user) <= this.#coolTime;
   }
 
-  run(interaction, data, ...args) {
-    this.#timer.set(interaction.user.id, new Date());
-    return this.callback(interaction, data, ...args);
+  getCoolTime(user) {
+    process.emitWarning('getCoolTime Deprecated!', {
+      code: 'Deprecated',
+      detail: 'Use getLaseUse() instead',
+    });
+    return this.getLastUse(user);
   }
 
+  getLastUseDiff(user) {
+    process.emitWarning('getLastUseDiff Deprecated!', {
+      code: 'Deprecated',
+      detail: 'Use getElapsedTime() instead',
+    });
+    return this.getElapsedTime(user);
+  }
   isCommand() {
     return true;
+  }
+
+  _run(interaction, args) {
+    this.#timer.set(interaction.user.id, new Date());
+    return this.callback(interaction, args);
+  }
+
+  toString() {
+    return this.data.name;
   }
 }
 

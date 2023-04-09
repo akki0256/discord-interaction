@@ -15,16 +15,21 @@ const discord = require('discord.js');
 const client = new discord.Client({
 	/* options */
 });
-const { DiscordInteractions } = require('@akki256/discord-interaction');
+const { DiscordInteractions, InteractionErrorCodes, InteractionsError } = require('@akki256/discord-interaction');
 const interactions = new DiscordInteractions(client);
 interactions.loadInteractions('./interactions');
 
 client.on('ready',() => {
-	interactions.registerCommands();
+	interactions.registerCommands({ syncWithCommand: true });
 })
 
 client.on('interactionCreate', interaction => {
-	interactions.run(interaction).then(console.info).catch(console.warn);
+	interactions.run(interaction).catch(error => {
+		if (error instanceof InteractionsError && error.code === InteractionErrorCodes.CommandHasCoolTime) {
+			if(interaction.isRepliable()) interaction.reply({ content: 'This command is currently on cool time.', ephemeral: true })
+		}
+		console.error(error);
+	});
 })
 
 client.login('token');
@@ -36,8 +41,8 @@ const { ChatInput } = require('@akki256/discord-interaction');
 const pingCommand = new ChatInput({
 	name: 'ping',
 	description: 'pong!'
-}, async interaction => {
-	return await interaction.reply('pong!')
+}, interaction => {
+	interaction.reply('pong!')
 })
 
 module.exports = [ pingCommand ];

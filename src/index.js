@@ -1,17 +1,19 @@
 'use strict';
+const ErrorCodes = require('./errors/ErrorCodes');
 
-exports.InteractionsError = require('./errors/InteractionsError').InteractionsError;
-exports.DiscordInteractionsErrorCodes = require('./errors/ErrorCodes');
-
-exports.DiscordInteractions = require('./client/DiscordInteractions');
-
-exports.BaseCommand = require('./structures/BaseCommand');
-exports.BaseInteraction = require('./structures/BaseInteraction');
-exports.Button = require('./structures/Button');
-exports.ChatInput = require('./structures/ChatInput');
-exports.MessageContext = require('./structures/MessageContext');
-exports.Modal = require('./structures/Modal');
-exports.SelectMenu = require('./structures/SelectMenu');
-exports.SelectMenuType = require('./enum').SelectMenuType;
-exports.UserContext = require('./structures/UserContext');
-exports.version = require('../package.json').version;
+module.exports = {
+	...require('./util/constant'),
+	InteractionsError: require('./errors/InteractionsError'),
+	ErrorCodes,
+	DiscordInteractionsErrorCodes: ErrorCodes,
+	DiscordInteractions: require('./client/DiscordInteractions'),
+	BaseCommand: require('./structures/BaseCommand'),
+	BaseInteraction: require('./structures/BaseInteraction'),
+	Button: require('./structures/Button'),
+	ChatInput: require('./structures/ChatInput'),
+	MessageContext: require('./structures/MessageContext'),
+	Modal: require('./structures/Modal'),
+	SelectMenu: require('./structures/SelectMenu'),
+	UserContext: require('./structures/UserContext'),
+	version: require('../package.json').version,
+};

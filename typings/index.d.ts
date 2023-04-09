@@ -1,157 +1,94 @@
 import {
-	AnySelectMenuInteraction,
-	ApplicationCommandType,
-	Awaitable,
-	BaseInteraction as DiscordBaseInteraction,
-	ButtonInteraction,
-	ChannelSelectMenuInteraction,
-	ChatInputApplicationCommandData,
-	ChatInputCommandInteraction,
 	Client,
-	Collection,
-	GuildMember,
-	MentionableSelectMenuInteraction,
-	Message,
-	MessageApplicationCommandData,
-	MessageContextMenuCommandInteraction,
+	Interaction,
+	ButtonInteraction,
 	ModalSubmitInteraction,
-	RoleSelectMenuInteraction,
-	Snowflake,
-	StringSelectMenuInteraction,
-	ThreadMember,
-	User,
-	UserApplicationCommandData,
+	ChatInputApplicationCommandData,
 	UserContextMenuCommandInteraction,
-	UserSelectMenuInteraction
+	UserApplicationCommandData,
+	MessageContextMenuCommandInteraction,
+	MessageApplicationCommandData,
+	ChatInputCommandInteraction,
+	Snowflake,
+	Collection,
+	User,
+	UserSelectMenuInteraction,
+	MentionableSelectMenuInteraction,
+	ChannelSelectMenuInteraction,
+	RoleSelectMenuInteraction,
+	StringSelectMenuInteraction,
+	AutocompleteInteraction,
+	Awaitable
 } from 'discord.js';
-import fs from 'node:fs';
-import { EventEmitter } from 'node:stream';
+import {
+	Dirent
+} from 'fs';
+import * as ErrorCode from '../src/errors/ErrorCodes';
+import { AutocompleteInteraction } from 'discord.js';
+import { Events } from '../src/util/constant';
 
 //#region Classes
+export class DiscordInteractions {
+	constructor(client: Client);
+	run(interaction: Interaction, args: object): Promise<void>;
+	registerCommands(option: RegisterCommandOptions | string): void;
+	loadRegistries(basePath: string, predicate: (value: Dirent) => boolean): Promise<void>;
+	/**@deprecated use {@link loadRegistries()}*/
+	loadInteractions(basePath: string, predicate: (value: Dirent) => boolean): Promise<void>;
 
-export class BaseInteraction<T extends InteractionData, U extends InteractionInteraction> {
-	#data: T;
-	#callback: U;
-	protected constructor(data: T, callback: (interaction: U, data: BaseInteraction<T, U>, ...args: any[]) => any);
+	get buttons(): Collection<string, Button>;
+	get chatInputs(): Collection<string, ChatInput>;
+	get messageContexts(): Collection<string, MessageContext>;
+	get modals(): Collection<string, Modal>;
+	get selectMenus(): Collection<string, SelectMenu<keyof SelectMenuInteractions>>;
+	get userContexts(): Collection<string, UserContext>;
 
-	public get data(): T;
-	public get callback(): (interaction: U, data: BaseInteraction<T, U>, ...args: any[]) => any;
-	protected run(interaction: U, ...args: any[]): any;
-	public isCommand(): this is BaseCommand<CommandData,CommandInteraction>;
-}
+	get registries(): {
+		buttons: Collection<string, Button>;
+		chatInputs: Collection<string, ChatInput>;
+		messageContexts: Collection<string, MessageContext>;
+		modals: Collection<string, Modal>;
+		selectMenus: Collection<string, SelectMenu>;
+		userContexts: Collection<string, UserContext>;
+	};
+	/**@deprecated use {@link registries}*/
+	get interactions(): {
+		buttons: Collection<string, Button>;
+		chatInputs: Collection<string, ChatInput>;
+		messageContexts: Collection<string, MessageContext>;
+		modals: Collection<string, Modal>;
+		selectMenus: Collection<string, SelectMenu>;
+		userContexts: Collection<string, UserContext>;
+	};
 
-export class BaseCommand<T extends CommandData, U extends CommandInteraction> extends BaseInteraction<T, U> {
-	#guildId: Snowflake | null;
-	#timer: Collection<Snowflake, Date>;
-	#coolTime: number;
-	protected constructor(data: T, meta: CommandMetadata, callback: (interaction: U, data: BaseCommand<T, U>, ...args: any[]) => any);
-	protected constructor(data: T, callback: (interaction: U, data: BaseCommand<T, U>, ...args: any[]) => any);
-
-	public get coolTime(): number;
-	public get guildId(): Snowflake | undefined;
-	public get timer(): Collection<Snowflake, Date>;
-
-	public getCoolTime(user: User): number | null;
-	public getLastUseDiff(user: User): number;
-	public IsInCoolTime(user: User): boolean;
-	public resetCoolTime(user: User): boolean;
-}
-
-export class ChatInput extends BaseCommand<ChatInputData, ChatInputCommandInteraction> {
-	public constructor(data: ChatInputData, meta: CommandMetadata, callback: (interaction: ChatInputCommandInteraction, data: ChatInput, ...args: any[]) => any);
-	public constructor(data: ChatInputData, callback: (interaction: ChatInputCommandInteraction, data: ChatInput, ...args: any[]) => any);
-}
-
-export class UserContext extends BaseCommand<UserContextData, UserContextMenuCommandInteraction> {
-	public constructor(data: UserContextData, meta: CommandMetadata, callback: (interaction: UserContextMenuCommandInteraction, data: UserContext, ...args: any[]) => any);
-	public constructor(data: UserContextData, callback: (interaction: UserContextMenuCommandInteraction, data: UserContext, ...args: any[]) => any);
-}
-
-export class MessageContext extends BaseCommand<MessageContextData, MessageContextMenuCommandInteraction> {
-	public constructor(data: MessageContextData, meta: CommandMetadata, callback: (interaction: MessageContextMenuCommandInteraction, data: MessageContext, ...args: any[]) => any);
-	public constructor(data: MessageContextData, callback: (interaction: MessageContextMenuCommandInteraction, data: MessageContext, ...args: any[]) => any);
-}
-
-export class Button extends BaseInteraction<CustomIdData, ButtonInteraction> {
-	public constructor(data: CustomIdData, callback: (interaction: ButtonInteraction, data: Button, ...args: any[]) => any);
-}
-
-export class SelectMenu<T extends SelectMenuType> extends BaseInteraction<SelectMenuData<T>, SelectMenuInteraction<T>> {
-	public constructor(data: SelectMenuData<T>, callback: (interaction: SelectMenuInteraction<T>, data: SelectMenu<T>, ...args: any[]) => any);
-}
-
-export class Modal extends BaseInteraction<CustomIdData, ModalSubmitInteraction> {
-	public constructor(data: CustomIdData, callback: (interaction: ModalSubmitInteraction, data: Modal, ...args: any[]) => any);
-}
-
-export class DiscordInteractions extends EventEmitter {
-	/**
-	 * @param client discord client
-	 */
-	public constructor(client: Client);
-	#chatInputs: Interactions['chatInputs'];
-	#userContexts: Interactions['userContexts'];
-	#messageContexts: Interactions['messageContexts'];
-	#buttons: Interactions['buttons'];
-	#selectMenus: Interactions['selectMenus'];
-	#modals: Interactions['modals'];
-	#interactions: Interactions;
-
-	get chatInputs(): Interactions['chatInputs'];
-	get userContexts(): Interactions['userContexts'];
-	get messageContexts(): Interactions['messageContexts'];
-	get buttons(): Interactions['buttons'];
-	get selectMenus(): Interactions['selectMenus'];
-	get modals(): Interactions['modals'];
-	get interactions(): Interactions;
-
-	loadInteractions(basePath: string, predicate?: (value: fs.Dirent) => boolean): Promise<void>;
-	registerCommands(options: registerOption): Promise<void>;
-	registerCommands(guildId?: Snowflake): Promise<void>;
-	deleteNoLoadInteractions(guildId?: Snowflake): Promise<void>;
-	setGuildOnly(guildId: Snowflake): DiscordInteractions;
-	resetGuildOnly(): DiscordInteractions;
-	run(interaction: InteractionInteraction, ...args: any[]): InteractionsPromise<any, InteractionsError | Error>;
-
-	#getAllPath(path: string, predicate?: (value: fs.Dirent) => boolean, pre?: Set<string>): string[];
-	#loadInteraction(interaction: Button | ChatInput | MessageContext | Modal | SelectMenu<any> | UserContext): void;
-	#editOrCreateCommand(interactionData: ChatInput | MessageContext | UserContext, options: { guildId?: Snowflake }): Promise<void>;
-	#isChatInputCommand(interaction: DiscordBaseInteraction): interaction is ChatInputCommandInteraction;
-	#isContextMenuCommand(interaction: DiscordBaseInteraction): interaction is UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction;
-	#isUserContextMenuCommand(interaction: DiscordBaseInteraction): interaction is UserContextMenuCommandInteraction;
-	#isMessageContextMenuCommand(interaction: DiscordBaseInteraction): interaction is MessageContextMenuCommandInteraction;
-	#isButton(interaction: DiscordBaseInteraction): interaction is ButtonInteraction;
-	#isAnySelectMenu(interaction: DiscordBaseInteraction): interaction is AnySelectMenuInteraction;
-	#isModalSubmit(interaction: DiscordBaseInteraction): interaction is ModalSubmitInteraction;
+	set guildId(id?: Snowflake);
+	get guildId(): Snowflake;
 
 	//#region EventEmitter
-	public on<K extends keyof DiscordInteractionsEvents>(
+	public on<K extends keyof ClientEvents>(
 		event: K,
-		listener: (...args: DiscordInteractionsEvents[K]) => Awaitable<void>,
+		listener: (...args: ClientEvents[K]) => Awaitable<void>,
 	): this;
 	public on<S extends string | symbol>(
-		event: Exclude<S, keyof DiscordInteractionsEvents>,
+		event: Exclude<S, keyof ClientEvents>,
 		listener: (...args: any[]) => Awaitable<void>,
 	): this;
 
-	public once<K extends keyof DiscordInteractionsEvents>(
+	public once<K extends keyof ClientEvents>(
 		event: K,
-		listener: (...args: DiscordInteractionsEvents[K]) => Awaitable<void>,
+		listener: (...args: ClientEvents[K]) => Awaitable<void>,
 	): this;
 	public once<S extends string | symbol>(
-		event: Exclude<S, keyof DiscordInteractionsEvents>,
+		event: Exclude<S, keyof ClientEvents>,
 		listener: (...args: any[]) => Awaitable<void>,
 	): this;
 
-	public emit<K extends keyof DiscordInteractionsEvents>(event: K, ...args: DiscordInteractionsEvents[K]): boolean;
-	public emit<S extends string | symbol>(event: Exclude<S, keyof DiscordInteractionsEvents>, ...args: unknown[]): boolean;
-
-	public off<K extends keyof DiscordInteractionsEvents>(
+	public off<K extends keyof ClientEvents>(
 		event: K,
-		listener: (...args: DiscordInteractionsEvents[K]) => Awaitable<void>,
+		listener: (...args: ClientEvents[K]) => Awaitable<void>,
 	): this;
 	public off<S extends string | symbol>(
-		event: Exclude<S, keyof DiscordInteractionsEvents>,
+		event: Exclude<S, keyof ClientEvents>,
 		listener: (...args: any[]) => Awaitable<void>,
 	): this;
 
@@ -160,104 +97,170 @@ export class DiscordInteractions extends EventEmitter {
 	//#endregion
 }
 
-export class InteractionsError extends Error {
-	public readonly code: DiscordInteractionsErrorCodes;
-	public readonly data: ChatInput | UserContext | MessageContext | Button | SelectMenu<any> | Modal;
+export class BaseInteraction<T extends InteractionRegistryData, PARAMS extends object, U extends Callback<Registries, CallbackInteraction, PARAMS>> {
+	#data: T;
+	#callback: U;
+	#id: Snowflake;
+	constructor(data: T, callback: U);
+
+	get data(): T;
+	get callback(): U;
+	get id(): Snowflake;
+	protected _setId(id: Snowflake): void;
+	protected _run(interaction: T, args: PARAMS): void;
+	isCommand(): this is BaseCommand<CommandRegistryData, PARAMS, Callback<CommandRegistries, CommandCallback, PARAMS>>;
+	toString(): string;
 }
 
+export class BaseCommand<T extends CommandRegistryData, PARAMS extends object, U extends Callback<CommandRegistries, CommandCallback, PARAMS>> extends BaseInteraction<T, PARAMS, U> {
+	constructor(data: T, meta: CommandMetadata, callback: U);
+	constructor(data: T, callback: U);
+
+	get coolTime(): number;
+	get guildId(): Snowflake | undefined;
+	get timer(): Collection<Snowflake, Date>;
+
+	resetCoolTime(user: User): boolean;
+	getLastUse(user: User): number | null;
+	getElapsedTime(user: User): number;
+	isInCoolTime(user: User): boolean;
+	/**@deprecated */
+	getCoolTime(user: User): number | null;
+	/**@deprecated */
+	getLastUseDiff(user: User): number;
+}
+
+export class Button<PARAMS extends object = {}> extends BaseInteraction<CustomIdRegistry, PARAMS, Callback<Button, ButtonInteraction, PARAMS>> {
+
+}
+
+export class ChatInput<PARAMS extends object = {}> extends BaseCommand<ChatInputRegistry, PARAMS, Callback<ChatInput<PARAMS>, ChatInputCommandInteraction, PARAMS>> {
+	constructor(data: ChatInputRegistry, callback: Callback<ChatInput<PARAMS>, ChatInputCommandInteraction, PARAMS>, autoComplete?: Callback<ChatInput<PARAMS>, AutocompleteInteraction, PARAMS>);
+	constructor(data: ChatInputRegistry, meta: CommandMetadata, callback: Callback<ChatInput<PARAMS>, ChatInputCommandInteraction, PARAMS>, autoComplete?: Callback<ChatInput<PARAMS>, AutocompleteInteraction, PARAMS>);
+	toCommandString(): `</${string}:${string}>`;
+}
+
+export class MessageContext<PARAMS extends object = {}> extends BaseCommand<MessageContextRegistry, PARAMS, Callback<MessageContext<PARAMS>, MessageContextMenuCommandInteraction, PARAMS>> {
+
+}
+
+export class Modal<PARAMS extends object = {}> extends BaseInteraction<CustomIdRegistry, PARAMS, Callback<Modal<PARAMS>, ModalSubmitInteraction, PARAMS>> {
+
+}
+
+export class SelectMenu<T extends keyof SelectMenuInteractions, PARAMS extends object = {}> extends BaseInteraction<SelectMenuRegistry, PARAMS, Callback<SelectMenu<T, PARAMS>, SelectMenuInteractions[T], PARAMS>> {
+	constructor(data: SelectMenuRegistry<T>, callback: Callback<SelectMenu<T, PARAMS>, SelectMenuInteractions[T], PARAMS>)
+}
+
+export class UserContext<PARAMS extends object = {}> extends BaseCommand<UserContextRegistry, PARAMS, Callback<UserContext, UserContextMenuCommandInteraction, PARAMS>> {
+
+}
+
+export class InteractionsError extends Error {
+	code: keyof typeof ErrorCode;
+	public data: ChatInput | MessageContext | UserContext;
+
+	get name(): string;
+}
 //#endregion
 
 //#region Typedef
+export const version: string;
+export * from '../src/util/constant';
+export const ErrorCodes: typeof ErrorCode;
+/**@deprecated use {@link ErrorCodes} */
+export const InteractionErrorCodes: typeof ErrorCode;
 
-export interface InteractionsPromise<T, R> extends Promise<T> {
-	/**
-		 * Attaches callbacks for the resolution and/or rejection of the Promise.
-		 * @param onfulfilled The callback to execute when the Promise is resolved.
-		 * @param onrejected The callback to execute when the Promise is rejected.
-		 * @returns A Promise for the completion of which ever callback is executed.
-		 */
-	then<TResult1 = T, TResult2 = R>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: R) => TResult2 | PromiseLike<TResult2>) | undefined | null): InteractionsPromise<TResult1, TResult2>;
+type PartialRecord<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-	/**
-	 * Attaches a callback for only the rejection of the Promise.
-	 * @param onrejected The callback to execute when the Promise is rejected.
-	 * @returns A Promise for the completion of the callback.
-	 */
-	catch<TResult = R>(onrejected?: ((reason: R) => TResult | PromiseLike<TResult>) | undefined | null): InteractionsPromise<T, TResult>;
-}
-
-export interface DiscordInteractionsEvents {
-	ChatInputCreate: [command: ChatInput];
-	ChatInputEdit: [command: ChatInput];
-	ChatInputDelete: [command: UserContext];
+export interface ClientEvents {
+	ChatInputCreate: [command: ApplicationCommand];
+	ChatInputEdit: [command: ApplicationCommand];
+	ChatInputDelete: [command: ApplicationCommand];
 	fileLoad: [filePath: string];
-	error: [error: InteractionsError];
-	interactionLoaded: [Interaction: Interactions];
-	UserCreate: [command: MessageContext];
-	UserDelete: [command: UserContext];
-	UserEdit: [command: MessageContext];
-	MessageCreate: [command: UserContext];
-	MessageEdit: [command: UserContext];
-	MessageDelete: [command: UserContext];
+	error: [error: Error];
+	interactionLoaded: [registries: DiscordInteractions['registries']];
+	UserCreate: [command: ApplicationCommand];
+	UserDelete: [command: ApplicationCommand];
+	UserEdit: [command: ApplicationCommand];
+	MessageCreate: [command: ApplicationCommand];
+	MessageEdit: [command: ApplicationCommand];
+	MessageDelete: [command: ApplicationCommand];
 }
 
-export interface Interactions {
-	buttons: Collection<String, Button>,
-	chatInputs: Collection<String, ChatInput>,
-	messageContexts: Collection<String, MessageContext>,
-	modals: Collection<String, Modal>,
-	selectMenus: Collection<String, SelectMenu<any>>,
-	userContexts: Collection<String, UserContext>,
+export type Callback<
+	THIS extends Registries,
+	Interaction,
+	PARAMS,
+> = (
+	this: THIS,
+	interaction: Interaction,
+	params: PARAMS
+) => void;
+
+export type Registries =
+	| CommandRegistries
+	| Button
+	| Modal
+	| SelectMenu<keyof SelectMenuInteractions>
+export type CommandRegistries =
+	| ChatInput
+	| MessageContext
+	| UserContext
+
+export type InteractionRegistryData = CommandRegistryData | CustomIdRegistry | SelectMenuRegistry;
+export type CallbackInteraction = CommandCallback | ButtonInteraction | ModalSubmitInteraction | SelectMenuInteractions[keyof SelectMenuInteractions];
+
+export type CommandRegistryData = ChatInputRegistry | UserContextRegistry | MessageContextRegistry;
+export type CommandCallback = ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction;
+
+export interface ChatInputRegistry extends ChatInputApplicationCommandData {
+
 }
 
-export enum SelectMenuType {
-	String = 'String',
-	User = 'User',
-	Role = 'Role',
-	Mentionable = 'Mentionable',
-	Channel = 'Channel'
+export interface UserContextRegistry extends PartialRecord<UserApplicationCommandData, 'type'> {
+
+}
+
+export interface MessageContextRegistry extends PartialRecord<MessageApplicationCommandData, 'type'> {
+
+}
+
+export interface CustomIdRegistry {
+	customId: string | RegExp;
+}
+
+export interface SelectMenuRegistry<T extends keyof SelectMenuInteractions = keyof SelectMenuInteractions> extends CustomIdRegistry {
+	type: T;
+}
+
+interface SelectMenuInteractions {
+	String: StringSelectMenuInteraction,
+	User: UserSelectMenuInteraction,
+	Role: RoleSelectMenuInteraction,
+	Mentionable: MentionableSelectMenuInteraction,
+	Channel: ChannelSelectMenuInteraction,
 }
 
 export interface CommandMetadata {
-	/**GuildId to register the command */
-	guildId?: Snowflake,
-	/**Time before the command can be reused */
-	coolTime?: number
+	/**GuildId to register the command. */
+	guildId?: Snowflake;
+	/**Number of milliseconds before the next command becomes available. */
+	coolTime?: number;
 }
 
-export type InteractionData = CommandData | CustomIdData;
-export type InteractionInteraction = CommandInteraction | ButtonInteraction | AnySelectMenuInteraction | ModalSubmitInteraction;
-
-export type CommandData = ChatInputData | UserContextData | MessageContextData;
-export type CommandInteraction = ChatInputCommandInteraction | UserContextMenuCommandInteraction | MessageContextMenuCommandInteraction;
-
-export type ChatInputData = ChatInputApplicationCommandData;
-export type UserContextData = Omit<UserApplicationCommandData, 'type'> & { type?: ApplicationCommandType.User };
-export type MessageContextData = Omit<MessageApplicationCommandData, 'type'> & { type?: ApplicationCommandType.Message };
-export interface CustomIdData {
-	customId: string | RegExp
-}
-export interface SelectMenuData<T extends SelectMenuType> extends CustomIdData {
-	type: T
-}
-
-export type SelectMenuInteraction<T extends SelectMenuType> =
-	T extends SelectMenuType.String ? StringSelectMenuInteraction :
-	T extends SelectMenuType.User ? UserSelectMenuInteraction :
-	T extends SelectMenuType.Role ? RoleSelectMenuInteraction :
-	T extends SelectMenuType.Mentionable ? MentionableSelectMenuInteraction :
-	T extends SelectMenuType.Channel ? ChannelSelectMenuInteraction :
-	never;
-
-export type UserResolvable = DiscordBaseInteraction | User | ThreadMember | GuildMember | Message | string;
-export const version: string;
-export enum DiscordInteractionsErrorCodes {
-	CommandHasCoolTime = 'CommandHasCoolTime'
-}
-
-export interface registerOption {
-	guildId?: Snowflake
-	deleteNoLoad?: boolean
-}
-
+export type RegisterCommandOptions = Partial<{
+	/**
+	 * GuildId to register the command.
+	 * The server ID in each file takes precedence.
+	 */
+	guildId: Snowflake;
+	/**If true, the loaded command is synchronized with the server */
+	syncWithCommand: boolean;
+	/**
+	 * If true, the loaded command is synchronized with the server
+	 * @deprecated use {@link RegisterCommandOptions.syncWithCommand}
+	 */
+	deleteNoLoad: boolean;
+}>;
 //#endregion

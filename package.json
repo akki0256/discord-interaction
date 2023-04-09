@@ -1,6 +1,6 @@
 {
   "name": "@akki256/discord-interaction",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "Module for easier handling of discord interaction",
   "main": "./src/index.js",
   "types": "./typings/index.d.ts",
@@ -29,10 +29,11 @@
   },
   "homepage": "https://github.com/akki0256/discord-interaction/blob/main/README.md",
   "dependencies": {
-    "discord.js": "^14.7.1"
+    "discord.js": "^14.9.0"
   },
   "devDependencies": {
-    "eslint": "^8.32.0",
+    "@akki256/discord-interaction": "link:",
+    "eslint": "^8.38.0",
     "eslint-config-google": "^0.14.0"
   }
 }

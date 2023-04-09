@@ -1,7 +1,5 @@
-'use strict';
+import { InteractionErrorCodes } from "./ErrorCodes";
 
-const InteractionsErrorCodes = require('./ErrorCodes');
-
-module.exports = {
-	[InteractionsErrorCodes.CommandHasCoolTime]: 'Command is currently on cool time',
-};
+module.exports = /**@type {const} */ ({
+	[InteractionErrorCodes.CommandHasCoolTime]: 'Command is currently on cool time',
+});
