@@ -5,7 +5,7 @@ module.exports = {
 	...require('./util/constant'),
 	InteractionsError: require('./errors/InteractionsError'),
 	ErrorCodes,
-	InteractionErrorCodes: ErrorCodes,
+	DiscordInteractionsErrorCodes: ErrorCodes,
 	DiscordInteractions: require('./client/DiscordInteractions'),
 	BaseCommand: require('./structures/BaseCommand'),
 	BaseInteraction: require('./structures/BaseInteraction'),

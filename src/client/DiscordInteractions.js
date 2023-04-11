@@ -6,6 +6,7 @@ const {
 	Collection,
 	ComponentType,
 	InteractionType,
+	Client
 } = require('discord.js');
 const Button = require('../structures/Button');
 const ChatInput = require('../structures/ChatInput');
@@ -78,43 +79,43 @@ class DiscordInteractions {
 		});
 	}
 
-	registerCommands(options) {
+	async registerCommands(options) {
 		if (typeof options === 'string') options = { guildId: options };
 		if (options.guildId) this.guildId = options.guildId;
 		const guilds = new Set();
-		for (const command of [
-			...this.registries.chatInputs.values(),
-			...this.registries.messageContexts.values(),
-			...this.registries.userContexts.values(),
+		for await (const command of [
+			...this.#registries.chatInputs.values(),
+			...this.#registries.messageContexts.values(),
+			...this.#registries.userContexts.values(),
 		]) {
 			if (command.guildId) guilds.add(command.guildId);
-			this.#editOrCreateCommand(command);
+			await this.#editOrCreateCommand(command);
 		}
 		if (options.syncWithCommand || options.deleteNoLoad) {
 			if (options.guildId) {
-				this.#syncWithCommand(options.guildId);
+				await this.#syncWithCommand(options.guildId);
+				this.#emitter.emit(Events.SyncedCommand, new Set([options.guildId]));
 			}
 			else {
 				this.#syncWithCommand();
-				for (const guildId of guilds) {
-					this.#syncWithCommand(guildId);
+				for await (const guildId of guilds) {
+					await this.#syncWithCommand(guildId);
 				}
+				this.#emitter.emit(Events.SyncedCommand, guilds);
 			}
 		}
 	}
 
 	async loadRegistries(basePath, predicate) {
-		for (const filePath of this.#getAllPath(basePath, predicate)) {
+		for await (const filePath of this.#getAllPath(basePath, predicate)) {
 			try {
-				const { default: registries } = await import(`file://${filePath}`);
-				this.#emitter.emit(Events.fileLoad, filePath);
-				if (Array.isArray(registries)) {
-					for (const registry of registries) {
-						this.#loadregistry(registry);
-					}
-				}
-				else {
-					this.#loadregistry(registries);
+				const { default: fileData } = await import(`file://${filePath}`) ?? {};
+				const data = Array.isArray(fileData) ? fileData : fileData?.['default'];
+				if (!data) continue;
+				const registries = Array.isArray(data) ? data : [data];
+				this.#emitter.emit(Events.fileLoad, filePath, registries);
+				for (const registry of registries) {
+					this.#loadregistry(registry);
 				}
 			}
 			catch (error) {
@@ -155,9 +156,9 @@ class DiscordInteractions {
 		const commands = await this.#client.application?.commands.fetch({ guildId });
 		if (!commands) return;
 		for (const command of commands.values()) {
-			if (command.type === ApplicationCommandType.ChatInput && !this.#registries.chatInputs.has(command.name)) continue;
-			if (command.type === ApplicationCommandType.Message && !this.#registries.messageContexts.has(command.name)) continue;
-			if (command.type === ApplicationCommandType.User && !this.#registries.userContexts.has(command.name)) continue;
+			if (command.type === ApplicationCommandType.ChatInput && this.#registries.chatInputs.has(command.name)) continue;
+			if (command.type === ApplicationCommandType.Message && this.#registries.messageContexts.has(command.name)) continue;
+			if (command.type === ApplicationCommandType.User && this.#registries.userContexts.has(command.name)) continue;
 			command.delete();
 			this.#emitter.emit(`${commandTypes[command.type]}Delete`, command);
 		}
@@ -199,31 +200,38 @@ class DiscordInteractions {
 	}
 
 	get buttons() {
-		return structuredClone(this.#registries.buttons);
+		return this.#registries.buttons.clone();
 	}
 
 	get chatInputs() {
-		return structuredClone(this.#registries.chatInputs);
+		return this.#registries.chatInputs.clone();
 	}
 
 	get messageContexts() {
-		return structuredClone(this.#registries.messageContexts);
+		return this.#registries.messageContexts.clone();
 	}
 
 	get modals() {
-		return structuredClone(this.#registries.modals);
+		return this.#registries.modals.clone();
 	}
 
 	get selectMenus() {
-		return structuredClone(this.#registries.selectMenus);
+		return this.#registries.selectMenus.clone();
 	}
 
 	get userContexts() {
-		return structuredClone(this.#registries.userContexts);
+		return this.#registries.userContexts.clone();
 	}
 
 	get registries() {
-		return structuredClone(this.#registries);
+		return {
+			buttons: this.buttons,
+			chatInputs: this.chatInputs,
+			messageContexts: this.messageContexts,
+			modals: this.modals,
+			selectMenus: this.selectMenus,
+			userContexts: this.userContexts,
+		};
 	}
 
 	/**@deprecated */

@@ -1,9 +1,9 @@
 const { ApplicationCommandType } = require('discord.js');
 
 const commandTypes = /** @type {const} */ ({
-	[ApplicationCommandType.ChatInput]: 'chatInput',
-	[ApplicationCommandType.Message]: 'messageContext',
-	[ApplicationCommandType.User]: 'userContext',
+	[ApplicationCommandType.ChatInput]: 'ChatInput',
+	[ApplicationCommandType.Message]: 'MessageContext',
+	[ApplicationCommandType.User]: 'UserContext',
 });
 
 const SelectMenuType = /** @type {const} */ ({
@@ -21,12 +21,13 @@ const Events = /**@type {const} */ ({
 	fileLoad: 'fileLoad',
 	error: 'error',
 	interactionLoaded: 'interactionLoaded',
-	UserCreate: 'UserCreate',
-	UserDelete: 'UserDelete',
-	UserEdit: 'UserEdit',
-	MessageCreate: 'MessageCreate',
-	MessageEdit: 'MessageEdit',
-	MessageDelete: 'MessageDelete',
+	UserContextCreate: 'UserContextCreate',
+	UserContextDelete: 'UserContextDelete',
+	UserContextEdit: 'UserContextEdit',
+	MessageContextCreate: 'MessageContextCreate',
+	MessageContextEdit: 'MessageContextEdit',
+	MessageContextDelete: 'MessageContextDelete',
+	SyncedCommand: 'SyncedCommand',
 });
 
 module.exports = { commandTypes, SelectMenuType, Events };

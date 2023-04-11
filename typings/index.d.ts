@@ -18,23 +18,22 @@ import {
 	RoleSelectMenuInteraction,
 	StringSelectMenuInteraction,
 	AutocompleteInteraction,
-	Awaitable
+	Awaitable,
+	ApplicationCommand,
+	ApplicationCommandType
 } from 'discord.js';
 import {
 	Dirent
 } from 'fs';
-import * as ErrorCode from '../src/errors/ErrorCodes';
-import { AutocompleteInteraction } from 'discord.js';
-import { Events } from '../src/util/constant';
 
 //#region Classes
 export class DiscordInteractions {
 	constructor(client: Client);
-	run(interaction: Interaction, args: object): Promise<void>;
+	run(interaction: Interaction, args?: object): Promise<void>;
 	registerCommands(option: RegisterCommandOptions | string): void;
-	loadRegistries(basePath: string, predicate: (value: Dirent) => boolean): Promise<void>;
+	loadRegistries(basePath: string, predicate?: (value: Dirent) => boolean): Promise<void>;
 	/**@deprecated use {@link loadRegistries()}*/
-	loadInteractions(basePath: string, predicate: (value: Dirent) => boolean): Promise<void>;
+	loadInteractions(basePath: string, predicate?: (value: Dirent) => boolean): Promise<void>;
 
 	get buttons(): Collection<string, Button>;
 	get chatInputs(): Collection<string, ChatInput>;
@@ -157,7 +156,7 @@ export class UserContext<PARAMS extends object = {}> extends BaseCommand<UserCon
 }
 
 export class InteractionsError extends Error {
-	code: keyof typeof ErrorCode;
+	code: keyof typeof ErrorCodes;
 	public data: ChatInput | MessageContext | UserContext;
 
 	get name(): string;
@@ -166,10 +165,18 @@ export class InteractionsError extends Error {
 
 //#region Typedef
 export const version: string;
-export * from '../src/util/constant';
-export const ErrorCodes: typeof ErrorCode;
+export const ErrorCodes = {
+	CommandHasCoolTime: 'CommandHasCoolTime'
+} as const;
+export const Events: { readonly [K in keyof ClientEvents]: K };
+export const SelectMenuType: { readonly [K in keyof SelectMenuInteractions]: K };
+export const commandType: {
+	readonly [ApplicationCommandType.ChatInput]: 'ChatInput',
+	readonly [ApplicationCommandType.Message]: 'MessageContext',
+	readonly [ApplicationCommandType.User]: 'UserContext',
+}
 /**@deprecated use {@link ErrorCodes} */
-export const InteractionErrorCodes: typeof ErrorCode;
+export const DiscordInteractionsErrorCodes: typeof ErrorCodes;
 
 type PartialRecord<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -177,15 +184,16 @@ export interface ClientEvents {
 	ChatInputCreate: [command: ApplicationCommand];
 	ChatInputEdit: [command: ApplicationCommand];
 	ChatInputDelete: [command: ApplicationCommand];
-	fileLoad: [filePath: string];
+	fileLoad: [filePath: string, registries: Registries[]];
 	error: [error: Error];
 	interactionLoaded: [registries: DiscordInteractions['registries']];
-	UserCreate: [command: ApplicationCommand];
-	UserDelete: [command: ApplicationCommand];
-	UserEdit: [command: ApplicationCommand];
-	MessageCreate: [command: ApplicationCommand];
-	MessageEdit: [command: ApplicationCommand];
-	MessageDelete: [command: ApplicationCommand];
+	UserContextCreate: [command: ApplicationCommand];
+	UserContextDelete: [command: ApplicationCommand];
+	UserContextEdit: [command: ApplicationCommand];
+	MessageContextCreate: [command: ApplicationCommand];
+	MessageContextEdit: [command: ApplicationCommand];
+	MessageContextDelete: [command: ApplicationCommand];
+	SyncedCommand: [guildIds: Set<string>]
 }
 
 export type Callback<
