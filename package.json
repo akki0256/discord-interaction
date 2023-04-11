@@ -1,6 +1,6 @@
 {
   "name": "@akki256/discord-interaction",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Module for easier handling of discord interaction",
   "main": "./src/index.js",
   "types": "./typings/index.d.ts",
