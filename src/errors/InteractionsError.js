@@ -1,5 +1,5 @@
-import { InteractionErrorCodes } from "./ErrorCodes";
-import Messages from "./Messages";
+const { InteractionErrorCodes } = require('./ErrorCodes');
+const Messages = require('./Messages');
 
 class InteractionsError extends Error {
 	constructor(code, data, ...args) {
