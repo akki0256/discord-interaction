@@ -1,4 +1,4 @@
-const { InteractionErrorCodes } = require('./ErrorCodes');
+const InteractionErrorCodes = require('./ErrorCodes');
 const Messages = require('./Messages');
 
 class InteractionsError extends Error {

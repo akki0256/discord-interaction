@@ -15,7 +15,7 @@ const discord = require('discord.js');
 const client = new discord.Client({
 	/* options */
 });
-const { DiscordInteractions, InteractionErrorCodes, InteractionsError } = require('@akki256/discord-interaction');
+const { DiscordInteractions, ErrorCodes, InteractionsError } = require('@akki256/discord-interaction');
 const interactions = new DiscordInteractions(client);
 interactions.loadInteractions('./interactions');
 
@@ -25,7 +25,7 @@ client.on('ready',() => {
 
 client.on('interactionCreate', interaction => {
 	interactions.run(interaction).catch(error => {
-		if (error instanceof InteractionsError && error.code === InteractionErrorCodes.CommandHasCoolTime) {
+		if (error instanceof InteractionsError && error.code === ErrorCodes.CommandHasCoolTime) {
 			if(interaction.isRepliable()) interaction.reply({ content: 'This command is currently on cool time.', ephemeral: true })
 		}
 		console.error(error);
