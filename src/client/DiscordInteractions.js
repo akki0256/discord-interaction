@@ -15,6 +15,8 @@ const Modal = require('../structures/Modal');
 const SelectMenu = require('../structures/SelectMenu');
 const UserContext = require('../structures/UserContext');
 const { commandTypes, Events } = require('../util/constant');
+const ErrorCodes = require('../errors/ErrorCodes');
+const InteractionsError = require('../errors/InteractionsError');
 
 /**
  * @typedef InteractionData
@@ -195,7 +197,7 @@ class DiscordInteractions {
 	#getCommandInteraction(collection, interaction) {
 		const cmd = collection.get(interaction.commandName);
 		if (!cmd) return;
-		if (cmd.isInCoolTime(interaction.user)) throw new InteractionsError(InteractionErrorCodes.CommandHasCoolTime, cmd);
+		if (cmd.isInCoolTime(interaction.user)) throw new InteractionsError(ErrorCodes.CommandHasCoolTime, cmd);
 		return cmd;
 	}
 
